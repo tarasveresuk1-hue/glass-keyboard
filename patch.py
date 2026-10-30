@@ -17,7 +17,7 @@ def rx(p, pat, new, flags=0):
 
 wr("build.gradle", """buildscript {
     repositories { google(); mavenCentral() }
-    dependencies { classpath 'com.android.tools.build:gradle:8.5.2' }
+    dependencies { classpath 'com.android.tools.build:gradle:7.4.2' }
 }
 allprojects {
     repositories { google(); mavenCentral() }
@@ -25,17 +25,17 @@ allprojects {
 """)
 wr("gradle.properties", """org.gradle.jvmargs=-Xmx1536m
 android.useAndroidX=true
-android.suppressUnsupportedCompileSdk=35
+android.nonFinalResIds=false\nandroid.suppressUnsupportedCompileSdk=34
 """)
 wr("app/build.gradle", """apply plugin: 'com.android.application'
 android {
     namespace 'org.pocketworkstation.pckeyboard'
-    compileSdk 35
+    compileSdk 34
     ndkVersion '26.1.10909125'
     defaultConfig {
         applicationId 'org.pocketworkstation.pckeyboard.alpha'
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 34
         versionCode 1040007
         versionName "v1.40.7-alpha"
         ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
