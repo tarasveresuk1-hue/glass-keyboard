@@ -114,7 +114,7 @@ rep(G, 'public String suggestedPunctuation = "!?,.";',
  'public String suggestedPunctuation = "!?,.";\n'
  '    public int keyboardOpacity = 100;\n    public boolean overlayMode = false;')
 rep(G, "// Set initial values", """addStringPref("pref_keyboard_opacity", new StringPref() {
-            public void set(String val) { keyboardOpacity = Integer.valueOf(val); }
+            public void set(String val) { keyboardOpacity = Math.round(Float.parseFloat(val)); }
             public String getDefault() { return "100"; }
             public int getFlags() { return FLAG_PREF_RECREATE_INPUT_VIEW; }
         });
