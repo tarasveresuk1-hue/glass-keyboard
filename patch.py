@@ -37,7 +37,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 1040007
-        versionName "v1.40.7-alpha"
+        versionName "1.40.7-glass1"
         ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
         externalNativeBuild { cmake { cppFlags "" } }
     }
@@ -163,3 +163,10 @@ rx(V, r'mPadding = new Rect\(0,\s*0,\s*0,\s*0\);',
         if (getBackground() != null) getBackground().mutate().setAlpha(a255);
         mPadding = new Rect(0, 0, 0, 0);""")
 print("OK")
+
+import glob
+for f in glob.glob("app/src/main/res/values*/strings.xml"):
+    s = rd(f)
+    s2 = re.sub(r'(<string name="english_ime_name"[^>]*>)[^<]*(</string>)', lambda m: m.group(1) + "Glass Keyboard" + m.group(2), s)
+    if s2 != s: wr(f, s2)
+wr(M, rd(M).replace("Hacker's Keyboard", "Glass Keyboard"))
