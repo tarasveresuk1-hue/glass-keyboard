@@ -374,3 +374,46 @@ rx(V, r'if \(mBackgroundAlpha != 255\) \{\s*keyBackground\.setAlpha\(mBackground
             }""")
 rep(V, "if (getBackground() != null) getBackground().mutate().setAlpha(a255);",
        "if (getBackground() != null) getBackground().mutate().setAlpha(Math.round(a255 * LatinIME.sKeyboardSettings.bgOpacity / 100f));")
+
+# --- перенести екран Glass на початок prefs.xml
+t = rd(X)
+s = t.find('    <PreferenceScreen\n            android:key="glass_screen"')
+if s < 0: sys.exit("НЕ ЗНАЙДЕНО в prefs.xml: glass_screen")
+e = t.find("    </PreferenceScreen>\n", s) + len("    </PreferenceScreen>\n")
+blk = t[s:e]
+t = t[:s] + t[e:]
+m = t.find("\n    <PreferenceCategory")
+if m < 0: sys.exit("НЕ ЗНАЙДЕНО в prefs.xml: перша PreferenceCategory")
+wr(X, t[:m] + "\n" + blk + t[m:])
+
+# --- прозорість бабла прев'ю
+L = "app/src/main/java/org/pocketworkstation/pckeyboard/LatinKeyboardBaseView.java"
+rep(G, "public int bgOpacity = 100,", "public int popupOpacity = 100;\n    public int bgOpacity = 100,")
+rep(G, "// Set initial values", _ip("pref_popup_opacity", "popupOpacity", "100") + "// Set initial values")
+rep(L, "popupPreviewX += mOffsetInWindow[0];", """{
+            android.graphics.drawable.Drawable pbg = mPreviewText.getBackground();
+            if (pbg != null) {
+                pbg = pbg.mutate();
+                pbg.setAlpha(Math.round(255f * LatinIME.sKeyboardSettings.keyboardOpacity / 100f * LatinIME.sKeyboardSettings.popupOpacity / 100f));
+            }
+        }
+        popupPreviewX += mOffsetInWindow[0];""")
+t = rd(X)
+A = 'android:key="pref_bg_opacity"\n                    android:title="@string/glass_bg_opacity" android:persistent="true" />'
+k = t.find(A)
+if k < 0: sys.exit("НЕ ЗНАЙДЕНО в prefs.xml: pref_bg_opacity")
+k += len(A)
+t = t[:k] + """
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="100" hk:minValue="0" hk:maxValue="100" hk:step="5"
+                    hk:displayFormat="%.0f%%"
+                    android:key="pref_popup_opacity"
+                    android:title="Popup opacity" android:persistent="true" />""" + t[k:]
+wr(X, t)
+
+# --- прозорість меню довгого натискання
+rep(L, "mMiniKeyboardContainer = container;", """if (container.getBackground() != null) {
+            container.setBackgroundDrawable(container.getBackground().mutate());
+            container.getBackground().setAlpha(Math.round(255f * LatinIME.sKeyboardSettings.keyboardOpacity / 100f * LatinIME.sKeyboardSettings.popupOpacity / 100f));
+        }
+        mMiniKeyboardContainer = container;""")

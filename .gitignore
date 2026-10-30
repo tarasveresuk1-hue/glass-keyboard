@@ -11,3 +11,4 @@
 /captures
 gradle
 .externalNativeBuild
+__pycache__/
