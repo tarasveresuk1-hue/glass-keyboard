@@ -36,8 +36,8 @@ android {
         applicationId 'org.pocketworkstation.pckeyboard.alpha'
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 1040007
-        versionName "1.40.7-glass1"
+        versionCode 1040008
+        versionName "1.40.7-glass2"
         ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
         externalNativeBuild { cmake { cppFlags "" } }
     }
@@ -170,3 +170,207 @@ for f in glob.glob("app/src/main/res/values*/strings.xml"):
     s2 = re.sub(r'(<string name="english_ime_name"[^>]*>)[^<]*(</string>)', lambda m: m.group(1) + "Glass Keyboard" + m.group(2), s)
     if s2 != s: wr(f, s2)
 wr(M, rd(M).replace("Hacker's Keyboard", "Glass Keyboard"))
+
+# ===== GLASS v2 =====
+wr("app/src/main/res/values/glass.xml", """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="glass_screen_title">Glass: look and transparency</string>
+    <string name="glass_screen_summary">Opacity, button outline and fill, overlay mode</string>
+    <string name="glass_cat_transparency">Transparency</string>
+    <string name="glass_cat_buttons">Buttons</string>
+    <string name="glass_total_opacity">Overall opacity (everything)</string>
+    <string name="glass_bg_opacity">Keyboard background opacity</string>
+    <string name="glass_own_style">Own button style</string>
+    <string name="glass_own_style_summary">Rounded buttons with adjustable fill and outline</string>
+    <string name="glass_fill_opacity">Button fill opacity</string>
+    <string name="glass_fill_color">Button fill color</string>
+    <string name="glass_outline_width">Outline thickness</string>
+    <string name="glass_outline_opacity">Outline opacity</string>
+    <string name="glass_outline_color">Outline color</string>
+    <string name="glass_corner_radius">Corner radius</string>
+    <string-array name="glass_fill_names">
+        <item>Black</item><item>Dark gray</item><item>Dark blue</item>
+        <item>Dark green</item><item>Dark red</item><item>Gray</item>
+    </string-array>
+    <string-array name="glass_fill_values">
+        <item>#000000</item><item>#333333</item><item>#1E3A5F</item>
+        <item>#1F4D2B</item><item>#5A1E1E</item><item>#666666</item>
+    </string-array>
+    <string-array name="glass_outline_names">
+        <item>White</item><item>Green</item><item>Cyan</item>
+        <item>Yellow</item><item>Orange</item><item>Red</item>
+    </string-array>
+    <string-array name="glass_outline_values">
+        <item>#FFFFFF</item><item>#00E676</item><item>#00E5FF</item>
+        <item>#FFEB3B</item><item>#FF9800</item><item>#FF5252</item>
+    </string-array>
+</resources>
+""")
+
+# --- prefs.xml: прибрати старі пункти, додати окремий екран
+t = rd(X)
+t, n = re.subn(r'\n    <org\.pocketworkstation\.pckeyboard\.SeekBarPreferenceString\s+android:defaultValue="100"\s+hk:minValue="20".*?pref_overlay_mode.*?android:persistent="true" />', '', t, count=1, flags=re.S)
+if n == 0: sys.exit("НЕ ЗНАЙДЕНО в prefs.xml: старі пункти прозорості")
+SCREEN = """
+    <PreferenceScreen
+            android:key="glass_screen"
+            android:title="@string/glass_screen_title"
+            android:summary="@string/glass_screen_summary">
+        <PreferenceCategory android:title="@string/glass_cat_transparency">
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="100" hk:minValue="5" hk:maxValue="100" hk:step="5"
+                    hk:displayFormat="%.0f%%"
+                    android:key="pref_keyboard_opacity"
+                    android:title="@string/glass_total_opacity" android:persistent="true" />
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="100" hk:minValue="0" hk:maxValue="100" hk:step="5"
+                    hk:displayFormat="%.0f%%"
+                    android:key="pref_bg_opacity"
+                    android:title="@string/glass_bg_opacity" android:persistent="true" />
+            <CheckBoxPreference
+                    android:key="pref_overlay_mode"
+                    android:title="@string/title_overlay_mode"
+                    android:summaryOn="@string/summary_overlay_on"
+                    android:summaryOff="@string/summary_overlay_off"
+                    android:defaultValue="false" android:persistent="true" />
+        </PreferenceCategory>
+        <PreferenceCategory android:title="@string/glass_cat_buttons">
+            <CheckBoxPreference
+                    android:key="pref_own_style"
+                    android:title="@string/glass_own_style"
+                    android:summary="@string/glass_own_style_summary"
+                    android:defaultValue="true" android:persistent="true" />
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="100" hk:minValue="0" hk:maxValue="100" hk:step="5"
+                    hk:displayFormat="%.0f%%"
+                    android:key="pref_fill_opacity"
+                    android:title="@string/glass_fill_opacity" android:persistent="true" />
+            <ListPreference
+                    android:key="pref_fill_color"
+                    android:title="@string/glass_fill_color"
+                    android:entries="@array/glass_fill_names"
+                    android:entryValues="@array/glass_fill_values"
+                    android:defaultValue="#333333" android:persistent="true" />
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="2" hk:minValue="0" hk:maxValue="12" hk:step="1"
+                    hk:displayFormat="%.0f"
+                    android:key="pref_outline_width"
+                    android:title="@string/glass_outline_width" android:persistent="true" />
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="100" hk:minValue="0" hk:maxValue="100" hk:step="5"
+                    hk:displayFormat="%.0f%%"
+                    android:key="pref_outline_opacity"
+                    android:title="@string/glass_outline_opacity" android:persistent="true" />
+            <ListPreference
+                    android:key="pref_outline_color"
+                    android:title="@string/glass_outline_color"
+                    android:entries="@array/glass_outline_names"
+                    android:entryValues="@array/glass_outline_values"
+                    android:defaultValue="#FFFFFF" android:persistent="true" />
+            <org.pocketworkstation.pckeyboard.SeekBarPreferenceString
+                    android:defaultValue="6" hk:minValue="0" hk:maxValue="20" hk:step="1"
+                    hk:displayFormat="%.0f"
+                    android:key="pref_corner_radius"
+                    android:title="@string/glass_corner_radius" android:persistent="true" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+"""
+k = t.rfind("</PreferenceScreen>")
+wr(X, t[:k] + SCREEN + t[k:])
+
+# --- GlobalKeyboardSettings: поля й реєстрація
+rep(G, "public boolean overlayMode = false;", """public boolean overlayMode = false;
+    public int bgOpacity = 100, fillOpacity = 100, outlineOpacity = 100;
+    public int outlineWidth = 2, cornerRadius = 6;
+    public boolean ownStyle = true;
+    public int fillColor = 0xFF333333, outlineColor = 0xFFFFFFFF;""")
+
+def _ip(key, field, default):
+    return """addStringPref("%s", new StringPref() {
+            public void set(String val) { %s = Math.round(Float.parseFloat(val)); }
+            public String getDefault() { return "%s"; }
+            public int getFlags() { return FLAG_PREF_RECREATE_INPUT_VIEW; }
+        });
+        """ % (key, field, default)
+
+def _cp(key, field, default):
+    return """addStringPref("%s", new StringPref() {
+            public void set(String val) { try { %s = android.graphics.Color.parseColor(val); } catch (Exception e) { } }
+            public String getDefault() { return "%s"; }
+            public int getFlags() { return FLAG_PREF_RECREATE_INPUT_VIEW; }
+        });
+        """ % (key, field, default)
+
+NEWP = (_ip("pref_bg_opacity", "bgOpacity", "100")
+      + _ip("pref_fill_opacity", "fillOpacity", "100")
+      + _ip("pref_outline_opacity", "outlineOpacity", "100")
+      + _ip("pref_outline_width", "outlineWidth", "2")
+      + _ip("pref_corner_radius", "cornerRadius", "6")
+      + _cp("pref_fill_color", "fillColor", "#333333")
+      + _cp("pref_outline_color", "outlineColor", "#FFFFFF")
+      + """addBooleanPref("pref_own_style", new BooleanPref() {
+            public void set(boolean val) { ownStyle = val; }
+            public boolean getDefault() { return true; }
+            public int getFlags() { return FLAG_PREF_RECREATE_INPUT_VIEW; }
+        });
+
+        """)
+rep(G, "// Set initial values", NEWP + "// Set initial values")
+
+# --- LatinKeyboardBaseView: метод малювання власної кнопки
+GLASS_JAVA = """
+    private final android.graphics.Paint mGlassFill = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.Paint mGlassStroke = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+
+    private void drawGlassKey(android.graphics.Canvas c, int w, int h, int[] st) {
+        GlobalKeyboardSettings gs = LatinIME.sKeyboardSettings;
+        float dens = getResources().getDisplayMetrics().density;
+        boolean hi = false;
+        for (int s : st) {
+            if (s == android.R.attr.state_pressed || s == android.R.attr.state_checked) hi = true;
+        }
+        float master = gs.keyboardOpacity / 100f;
+        int base = gs.fillColor;
+        int cr = android.graphics.Color.red(base);
+        int cg = android.graphics.Color.green(base);
+        int cb = android.graphics.Color.blue(base);
+        if (hi) {
+            cr += (255 - cr) * 35 / 100;
+            cg += (255 - cg) * 35 / 100;
+            cb += (255 - cb) * 35 / 100;
+        }
+        int fa = Math.round(255 * master * gs.fillOpacity / 100f);
+        mGlassFill.setStyle(android.graphics.Paint.Style.FILL);
+        mGlassFill.setColor(android.graphics.Color.argb(fa, cr, cg, cb));
+        float sw = gs.outlineWidth * dens;
+        float inset = sw / 2f + dens;
+        android.graphics.RectF rect = new android.graphics.RectF(inset, inset, w - inset, h - inset);
+        float rad = gs.cornerRadius * dens;
+        c.drawRoundRect(rect, rad, rad, mGlassFill);
+        if (sw > 0) {
+            int oc = gs.outlineColor;
+            int oa = Math.round(255 * master * gs.outlineOpacity / 100f);
+            mGlassStroke.setStyle(android.graphics.Paint.Style.STROKE);
+            mGlassStroke.setStrokeWidth(sw);
+            mGlassStroke.setColor(android.graphics.Color.argb(oa,
+                    android.graphics.Color.red(oc), android.graphics.Color.green(oc), android.graphics.Color.blue(oc)));
+            c.drawRoundRect(rect, rad, rad, mGlassStroke);
+        }
+    }
+"""
+t = rd(V)
+mm = re.search(r'public class LatinKeyboardBaseView\b[^{]*\{', t)
+if not mm: sys.exit("НЕ ЗНАЙДЕНО в LatinKeyboardBaseView: оголошення класу")
+wr(V, t[:mm.end()] + GLASS_JAVA + t[mm.end():])
+
+rx(V, r'if \(mBackgroundAlpha != 255\) \{\s*keyBackground\.setAlpha\(mBackgroundAlpha\);\s*\}\s*keyBackground\.draw\(canvas\);',
+ """if (LatinIME.sKeyboardSettings.ownStyle) {
+                drawGlassKey(canvas, keyBackground.getBounds().right, keyBackground.getBounds().bottom, drawableState);
+            } else {
+                if (mBackgroundAlpha != 255) {
+                    keyBackground.setAlpha(mBackgroundAlpha);
+                }
+                keyBackground.draw(canvas);
+            }""")
+rep(V, "if (getBackground() != null) getBackground().mutate().setAlpha(a255);",
+       "if (getBackground() != null) getBackground().mutate().setAlpha(Math.round(a255 * LatinIME.sKeyboardSettings.bgOpacity / 100f));")
